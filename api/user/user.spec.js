@@ -1,4 +1,6 @@
-const app = require('./index');
+//TestCode
+
+const app = require('../../index');
 const request = require('supertest');
 const should = require('should');
 
@@ -59,7 +61,7 @@ describe('GET /users/1는', ()=> {
     })
 });
 
-describe('GET /users/1', ()=> {
+describe('DELETE  /users/:id', ()=> {
     describe('성공시', ()=> {
         it('204를 응답한다', (done)=> {
             request(app)
@@ -85,7 +87,7 @@ describe('POST /users', () => {
         before(done => {
             request(app)
             .post('/users')
-            .send(name)
+            .send({name})
             .expect(201)
             .end((err, res) => {
                 body = res.body;
@@ -97,6 +99,66 @@ describe('POST /users', () => {
         })
         it('입력한 name을 반환한다', ()=> {
             body.should.have.property('name', 'daniel')
+        })
+    })
+    describe('실패시', ()=> {
+        it('name 파라메터 누락시 400을 반환한다', (done)=>{
+            request(app)
+            .post('/users')
+            .send({})
+            .expect(400)
+            .end(done)
+        })
+        it('name이 중복일 경우 409를 반환한다', (done)=> {
+            request(app)
+            .post('/users')
+            .send({name: 'daniel'})
+            .expect(409)
+            .end(done)
+        })
+    })
+})
+
+describe('PUT /users/:id', ()=> {
+    describe('성공시', ()=> {
+        it('변경된 name을 응답한다', (done) => {
+            const name = 'charlie';
+            request(app)
+            .put('/users/3')
+            .send({name})
+            .end((err, res) => {
+                res.body.should.have.property('name', name);
+                done();
+            })
+        })
+    })
+    describe('실패시', ()=> {
+        it('정수가 아닌 id일 경우 400을 응답한다', (done) => {
+            request(app)
+            .put('/users/one')
+            .expect(400)
+            .end(done);
+        })
+        it('name이 없을 경우 400을 응답한다', (done) => {
+            request(app)
+            .put('/users/1')
+            .send({})
+            .expect(400)
+            .end(done);
+        })
+        it('없는 유저일 경우 404를 응답한다', (done) => {
+            request(app)
+            .put('/users/999')
+            .send({name: 'foo'})
+            .expect(404)
+            .end(done);
+        })
+        it('이름이 중복일 경우 409을 응답한다', done => {
+            request(app)
+            .put('/users/3')
+            .send({name: 'bek'})
+            .expect(409)
+            .end(done);
         })
     })
 })
